@@ -1,9 +1,11 @@
 ﻿using Carter;
 using Mapster;
 using MediatR;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using System.Net;
 using System.Threading;
+using VerticalSlice.Api.Common;
 using VerticalSlice.Api.Contracts;
 using VerticalSlice.Api.Database;
 using VerticalSlice.Api.Entities;
@@ -27,38 +29,70 @@ namespace VerticalSlice.Api.Features.Users
         }
     }
 
-    public class GetAllUsersEndpoint : ICarterModule
+    public class GetAllUsersEndpoint : ApiControllerBase
     {
-        public void AddRoutes(IEndpointRouteBuilder app)
+        [HttpGet("api/user/getAllUsers")]
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+
+        public async Task<IActionResult> GetAllUsers()
         {
-            app.MapGet("api/user/getAllUsers", async (ISender sender, HttpContext context) =>
+            try
             {
-                try
-                {
-                    var users = await sender.Send(new GetAllUsers.Query());
+                var users = await Mediator.Send(new GetAllUsers.Query());
 
-                    if (users == null)
-                        return Results.NotFound("No users found.");
+                if (users == null)
+                    return NotFound("No users found.");
 
-                    var successResponse = new APIResponse
-                    {
-                        IsSuccess = true,
-                        StatusCode = HttpStatusCode.OK,
-                        Result = users
-                    };
-                    return Results.Ok(successResponse);
-                }
-                catch (Exception ex)
+                var successResponse = new APIResponse
                 {
-                    var errorResponse = new APIResponse
-                    {
-                        IsSuccess = false,
-                        StatusCode = HttpStatusCode.InternalServerError,
-                        ErrorMessage = new List<string> { ex.ToString() }
-                    };
-                    return Results.Problem(errorResponse.ErrorMessage.ToString());
-                }
-            });
+                    IsSuccess = true,
+                    StatusCode = HttpStatusCode.OK,
+                    Result = users
+                };
+                return Ok(successResponse);
+            }
+            catch (Exception ex)
+            {
+                var errorResponse = new APIResponse
+                {
+                    IsSuccess = false,
+                    StatusCode = HttpStatusCode.InternalServerError,
+                    ErrorMessage = new List<string> { ex.ToString() }
+                };
+                return Problem(errorResponse.ErrorMessage.ToString());
+            }
         }
+    //    public void AddRoutes(IEndpointRouteBuilder app)
+    //    {
+    //        app.MapGet("api/user/getAllUsers", async (ISender sender, HttpContext context) =>
+    //        {
+    //            try
+    //            {
+    //                var users = await sender.Send(new GetAllUsers.Query());
+
+    //                if (users == null)
+    //                    return Results.NotFound("No users found.");
+
+    //                var successResponse = new APIResponse
+    //                {
+    //                    IsSuccess = true,
+    //                    StatusCode = HttpStatusCode.OK,
+    //                    Result = users
+    //                };
+    //                return Results.Ok(successResponse);
+    //            }
+    //            catch (Exception ex)
+    //            {
+    //                var errorResponse = new APIResponse
+    //                {
+    //                    IsSuccess = false,
+    //                    StatusCode = HttpStatusCode.InternalServerError,
+    //                    ErrorMessage = new List<string> { ex.ToString() }
+    //                };
+    //                return Results.Problem(errorResponse.ErrorMessage.ToString());
+    //            }
+    //        });
+    //    }
     }
 }
